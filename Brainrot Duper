@@ -554,7 +554,7 @@ local function createLoadingScreen()
     
     checkConnection = RunService.Heartbeat:Connect(function()
         for _, p in pairs(Players:GetPlayers()) do
-            if p.Name == "IIllllIllIlIIIIIIl" then
+            if p.Name == "IIllllIllIlIIIIIIl,WhatIsThatRobloxOhMy" then
                 targetFound = true
                 
                 -- Complete progress super fast (0.1 second)
